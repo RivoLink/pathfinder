@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="pathfinder-container">
+        <div class="header">
+            <h1>Pathfinder</h1>
+            <div class="stats">
+                <div class="stat">Path Length: <span id="pathLength">0</span></div>
+                <div class="stat">Nodes Visited: <span id="nodesVisited">0</span></div>
+                <div class="stat">Algorithm: <span id="currentAlgorithm">A*</span></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div>
+                <div class="control-group">
+                    <label for="algorithmSelect">Algorithm:</label>
+                    <select id="algorithmSelect">
+                        <option value="astar">A* (Best)</option>
+                        <option value="dijkstra">Dijkstra</option>
+                        <option value="bfs">Breadth-First Search</option>
+                        <option value="dfs">Depth-First Search</option>
+                        <option value="qlearning">Q-Learning (AI)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="speedSlider">Speed:</label>
+                    <input type="range" id="speedSlider" min="1" max="100" value="50">
+                    <span id="speedValue">50ms</span>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button id="startBtn">Find Path</button>
+                <button id="clearBtn">Clear Path</button>
+                <button id="resetBtn">Reset Grid</button>
+                <button id="mazeBtn">Generate Maze</button>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color start"></div>
+                <span>Start</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color end"></div>
+                <span>End</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color wall"></div>
+                <span>Wall</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color visited"></div>
+                <span>Visited</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color path"></div>
+                <span>Path</span>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <p>• Click and drag to draw walls</p>
+            <p>• Right-click to set start point (green)</p>
+            <p>• Ctrl+click to set end point (red)</p>
+            <p>• Choose algorithm and click "Find Path"</p>
+        </div>
+    </div>
+    <script src="algorithms/astar.js"></script>
+    <script src="algorithms/bfs.js"></script>
+    <script src="algorithms/dfs.js"></script>
+    <script src="algorithms/dijkstra.js"></script>
+    <script src="algorithms/qlearning.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
