@@ -247,12 +247,14 @@ class PathfinderVisualizer {
             const algorithm = this.algorithms[this.currentAlgorithm];
             const result = await algorithm.execute();
 
-            if (result.path.length > 0) {
-                await this.animatePath(result.path);
-            }
-
             this.elements.pathLength.textContent = result.path.length;
             this.elements.nodesVisited.textContent = result.visitedCount;
+
+            if (result.path.length > 0) {
+                await this.animatePath(result.path);
+            } else {
+                window.alert("No path found. Try removing some walls or select a different algorithm.");
+            }
         } catch (error) {
             console.error('Pathfinding error:', error);
         }
