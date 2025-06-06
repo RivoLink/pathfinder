@@ -39,20 +39,35 @@ class QLearningAlgorithm {
             let x = this.visualizer.startNode.x, y = this.visualizer.startNode.y;
             let steps = 0;
             const visited = new Set();
+            let stuckCounter = 0;
+            let lastPosition = null;
 
             while (steps < maxSteps && (x !== this.visualizer.endNode.x || y !== this.visualizer.endNode.y)) {
                 const action = this.selectAction(x, y);
                 const newPos = this.getNextPosition(x, y, action);
+
+                if (this.isSurroundedByWalls(x, y)) break;
 
                 if (this.isWall(newPos.x, newPos.y)) {
                     newPos.x = x;
                     newPos.y = y;
                 }
 
+                if (lastPosition && lastPosition.x === newPos.x && lastPosition.y === newPos.y) {
+                    if (++stuckCounter > 5) {
+                        // Give strong negative reward for being stuck
+                        this.updateQValue(x, y, action, -50, newPos.x, newPos.y);
+                        break;
+                    }
+                } else {
+                    stuckCounter = 0;
+                }
+
                 const reward = this.getReward(x, y, newPos.x, newPos.y, visited);
                 this.updateQValue(x, y, action, reward, newPos.x, newPos.y);
 
                 visited.add(`${newPos.x},${newPos.y}`);
+                lastPosition = {x, y};
                 x = newPos.x;
                 y = newPos.y;
                 steps++;
@@ -63,6 +78,20 @@ class QLearningAlgorithm {
                 this.epsilon = Math.max(0.05, this.epsilon * 0.998);
             }
         }
+    }
+
+    isSurroundedByWalls(x, y) {
+        const actions = ['up', 'down', 'left', 'right'];
+        let wallCount = 0;
+
+        for (const action of actions) {
+            const pos = this.getNextPosition(x, y, action);
+            if (this.isWall(pos.x, pos.y)) {
+                wallCount++;
+            }
+        }
+
+        return wallCount === 4;
     }
 
     selectAction(x, y) {
@@ -120,13 +149,17 @@ class QLearningAlgorithm {
     }
 
     async executeLearned() {
-        const path = [];
+        let path = [];
         let x = this.visualizer.startNode.x, y = this.visualizer.startNode.y;
         let steps = 0;
         const maxSteps = this.visualizer.gridWidth * this.visualizer.gridHeight;
         const visited = new Set();
+        let stuckCounter = 0;
+        let lastPosition = null;
 
         while (steps < maxSteps && (x !== this.visualizer.endNode.x || y !== this.visualizer.endNode.y)) {
+            if (this.isSurroundedByWalls(x, y)) break;
+
             if (!this.visualizer.grid[y][x].isStart && !this.visualizer.grid[y][x].isEnd) {
                 this.visualizer.grid[y][x].isVisited = true;
                 this.visualizer.grid[y][x].element.classList.add('visited');
@@ -154,23 +187,46 @@ class QLearningAlgorithm {
             const testPos = this.getNextPosition(x, y, bestAction);
             if (visited.has(`${testPos.x},${testPos.y}`) && validActions.length > 1) {
                 const sorted = validActions.sort((a, b) => qValues[b] - qValues[a]);
+                let foundAlternative = false;
+
                 for (const action of sorted) {
                     const pos = this.getNextPosition(x, y, action);
                     if (!visited.has(`${pos.x},${pos.y}`)) {
                         bestAction = action;
+                        foundAlternative = true;
                         break;
                     }
+                }
+
+                // If no unvisited alternative, try the second-best action
+                if (!foundAlternative && sorted.length > 1) {
+                    bestAction = sorted[1];
                 }
             }
 
             const newPos = this.getNextPosition(x, y, bestAction);
+
+            // Check if agent is stuck in same position
+            if (lastPosition && lastPosition.x === newPos.x && lastPosition.y === newPos.y) {
+                if (++stuckCounter > 5) break;
+            } else {
+                stuckCounter = 0;
+            }
+
             visited.add(`${x},${y}`);
+            lastPosition = {x, y};
             x = newPos.x;
             y = newPos.y;
             steps++;
         }
 
-        path.push({ x: this.visualizer.endNode.x, y: this.visualizer.endNode.y });
+        // Only add end position if we actually reached it
+        if (x === this.visualizer.endNode.x && y === this.visualizer.endNode.y) {
+            path.push({ x: this.visualizer.endNode.x, y: this.visualizer.endNode.y });
+        } else {
+            path = [];
+        }
+
         return { path: this.extractGridPath(path), visitedCount: path.length };
     }
 
